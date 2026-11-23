@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LocalHarvest · Tester instructions &amp; feedback</title>
+<style>
+  :root{
+    --bg:#f6f5f1; --panel:#ffffff; --ink:#1f2421; --muted:#5d655f; --line:#e2e0d8;
+    --accent:#2f6b3a; --accent-soft:#e7f0e8; --warn:#9a3b16; --warn-soft:#fbeee6;
+    --radius:10px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+  a{color:var(--accent)}
+  button{font:inherit;cursor:pointer}
+
+  /* ---------- layout ---------- */
+  .app{display:flex;min-height:100vh}
+  .sidebar{width:270px;flex:none;background:var(--panel);border-right:1px solid var(--line);
+    position:sticky;top:0;height:100vh;display:flex;flex-direction:column;padding:22px 16px}
+  .brand{font-weight:700;font-size:1.1rem;letter-spacing:.01em;padding:0 8px}
+  .brand small{display:block;font-weight:400;color:var(--muted);font-size:.85rem}
+  nav{margin-top:22px;display:flex;flex-direction:column;gap:4px}
+  .nav-btn{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;
+    border:0;background:none;padding:10px 12px;border-radius:8px;color:var(--ink);font-weight:600}
+  .nav-btn:hover{background:var(--bg)}
+  .nav-btn.active{background:var(--accent-soft);color:var(--accent)}
+  .nav-btn .count{font-weight:500;font-size:.8rem;color:var(--muted)}
+  .subnav{display:flex;flex-direction:column;margin:2px 0 8px 12px;border-left:2px solid var(--line)}
+  .subnav a{padding:5px 12px;font-size:.9rem;color:var(--muted);text-decoration:none}
+  .subnav a:hover{color:var(--ink)}
+  .subnav a[hidden]{display:none}
+  .progress{height:6px;background:var(--line);border-radius:3px;margin:4px 12px 0;overflow:hidden}
+  .progress span{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+  .side-foot{margin-top:auto;font-size:.82rem;color:var(--muted);padding:0 8px}
+  .side-foot .saved{display:block;margin-bottom:6px}
+  .linklike{border:0;background:none;padding:0;color:var(--muted);text-decoration:underline;font-size:.82rem}
+
+  main{flex:1;min-width:0;padding:40px 48px 80px}
+  .view{max-width:760px}
+  .view[hidden]{display:none}
+  h1{font-size:1.75rem;line-height:1.25;margin:0 0 12px}
+  h2{font-size:1.25rem;margin:40px 0 6px;padding-top:8px}
+  h2 .tag{font-size:.75rem;font-weight:600;color:var(--accent);background:var(--accent-soft);
+    padding:2px 8px;border-radius:20px;vertical-align:middle;margin-left:6px}
+  .lede{color:var(--muted);margin-top:0}
+
+  .banner{padding:12px 16px;border-radius:var(--radius);margin-bottom:20px;font-size:.95rem;
+    background:var(--accent-soft);border:1px solid #cfe0d1}
+  .banner.warn{background:var(--warn-soft);border-color:#efcdbb}
+  .banner[hidden]{display:none}
+
+  /* ---------- instructions ---------- */
+  .steps{list-style:none;padding:0;margin:20px 0;counter-reset:step}
+  .steps>li{counter-increment:step;background:var(--panel);border:1px solid var(--line);
+    border-radius:var(--radius);padding:14px 16px 14px 56px;margin-bottom:10px;position:relative}
+  .steps>li::before{content:counter(step);position:absolute;left:16px;top:13px;width:26px;height:26px;
+    border-radius:50%;background:var(--bg);border:1px solid var(--line);display:grid;place-items:center;
+    font-size:.85rem;font-weight:700;color:var(--muted)}
+  .steps>li.done{opacity:.6}
+  .steps>li.done::before{content:"✓";background:var(--accent);border-color:var(--accent);color:#fff}
+  .steps label.check{display:flex;gap:8px;align-items:center;font-size:.85rem;color:var(--muted);margin-top:8px;cursor:pointer}
+  .steps ul{margin:6px 0 0;padding-left:20px}
+  .note{font-size:.9rem;color:var(--muted)}
+  .todo{background:#fff3c4;padding:0 4px;border-radius:3px}
+  .primary{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:11px 20px;font-weight:600}
+  .primary:hover{filter:brightness(1.08)}
+  .primary:disabled{opacity:.6;cursor:wait}
+  .secondary{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px 16px}
+
+  /* ---------- questionnaire ---------- */
+  .q{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin:12px 0}
+  .q[hidden]{display:none}
+  .q.invalid{border-color:var(--warn);box-shadow:0 0 0 3px var(--warn-soft)}
+  .q .label{font-weight:600;display:block;margin-bottom:8px}
+  .q .hint{font-size:.88rem;color:var(--muted);margin:-4px 0 8px}
+  .q .err{color:var(--warn);font-size:.88rem;margin-top:6px;display:none}
+  .q.invalid .err{display:block}
+  .req{color:var(--warn)}
+  .opt{font-weight:400;color:var(--muted);font-size:.85rem}
+  .choices{display:flex;flex-direction:column;gap:6px}
+  .choices label{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+  .choices input{margin-top:5px}
+  input[type=text],input[type=email],input[type=url],textarea{width:100%;font:inherit;padding:9px 11px;
+    border:1px solid var(--line);border-radius:8px;background:#fdfdfb}
+  textarea{min-height:90px;resize:vertical}
+  input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .grid2 label{font-size:.9rem;color:var(--muted)}
+  .doc-name{font-weight:600;margin:10px 0 6px}
+
+  .likert{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+  .likert .end{font-size:.8rem;color:var(--muted);width:110px}
+  .likert .end.right{text-align:right}
+  .likert .pts{display:flex;gap:6px}
+  .likert input{position:absolute;opacity:0;pointer-events:none}
+  .likert .pt{width:42px;height:38px;border:1px solid var(--line);border-radius:8px;display:grid;place-items:center;
+    cursor:pointer;font-weight:600;background:#fdfdfb}
+  .likert input:checked+.pt{background:var(--accent);border-color:var(--accent);color:#fff}
+  .likert input:focus-visible+.pt{outline:2px solid var(--accent);outline-offset:2px}
+  .likert .pt.na{width:auto;padding:0 10px;font-weight:500;font-size:.85rem}
+
+  .filelist{font-size:.88rem;color:var(--muted);margin:8px 0 0;padding-left:18px}
+  .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+  .submit-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:20px}
+  #submitStatus{font-size:.95rem}
+
+  /* ---------- mobile ---------- */
+  @media (max-width:820px){
+    .app{flex-direction:column}
+    .sidebar{position:sticky;top:0;z-index:5;width:auto;height:auto;flex-direction:row;align-items:center;
+      padding:10px 12px;border-right:0;border-bottom:1px solid var(--line);gap:10px}
+    .brand small,.subnav,.side-foot,.progress{display:none}
+    nav{margin:0 0 0 auto;flex-direction:row}
+    .nav-btn{padding:8px 10px;font-size:.9rem;gap:6px}
+    main{padding:24px 16px 60px}
+    .grid2{grid-template-columns:1fr}
+    .likert .end{width:auto;flex-basis:100%}
+    .likert .end.right{text-align:left;order:3}
+  }
+  @media (max-width:560px){
+    .brand{display:none}
+    nav{margin:0;flex:1}
+    .nav-btn{flex:1;justify-content:center}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ======================= SIDEBAR ======================= -->
+  <aside class="sidebar">
+    <div class="brand">LocalHarvest<small>Tester instructions &amp; feedback</small></div>
+    <nav>
+      <button class="nav-btn" data-view="instructions" type="button">Instructions <span class="count" id="stepCount"></span></button>
+      <button class="nav-btn" data-view="questionnaire" type="button">Questionnaire <span class="count" id="qCount"></span></button>
+      <div class="progress" aria-hidden="true"><span id="qBar"></span></div>
+      <div class="subnav" id="subnav">
+        <a href="#part0">0 · About you</a>
+        <a href="#part1">1 · Technical functionality</a>
+        <a href="#results" data-show-if="install_status=Yes|Partly">2 · Test results</a>
+        <a href="#part2" data-show-if="install_status=Yes|Partly">3 · User experience</a>
+        <a href="#finish">Submit</a>
+      </div>
+    </nav>
+    <div class="side-foot">
+      <span class="saved" id="saveStatus">Your answers save automatically in this browser.</span>
+      <button class="linklike" type="button" id="clearBtn">Clear saved answers</button>
+    </div>
+  </aside>
+
+  <main>
+    <div class="banner" id="restoreBanner" hidden></div>
+    <div class="banner warn" id="tokenBanner" hidden>
+      This page should be opened from the <strong>personal link</strong> we sent you (it ends in <code>?t=…</code>).
+      You can read the instructions and fill in answers, but you’ll need your link to submit.
+    </div>
+    <div class="banner warn" id="storageBanner" hidden>
+      Your browser isn’t letting this page save progress (private browsing can cause this). Please finish in one go,
+      or use “Download a copy of my answers” before leaving.
+    </div>
+
+    <!-- ======================= INSTRUCTIONS ======================= -->
+    <section class="view" id="view-instructions">
+      <h1>Thank you for helping us test LocalHarvest!</h1>
+      <p>LocalHarvest is intended to be a secure tool that turns tables in sensitive PDFs into structured data you can search
+        and analyze. <strong>Your documents never leave your machine.</strong> The app is powered by a local AI model that runs on your computer.</p>
+      <p>Currently the tool is optimized for parsing tables in corporate ownership documents, such as registers of shareholders
+        and subsidiary lists. It can be expanded to other types of tables, and we encourage you to explore this once testing
+        with the sample documents is complete.</p>
+      <p>The tool offers two functions: finding interesting pages in long documents (<strong>“triage”</strong>) and reading those pages
+        to pull out the data you are looking for (<strong>“extract”</strong>).</p>
+      <p>Our goal for this round of testing is to get feedback about the functionality and experience of using the app.
+        Testing takes approximately <strong>2 hours</strong>, not counting the time the app spends processing. If you would like to record your
+        screen while you use the app, that would be helpful for the developers, but it’s not required.</p>
+
+      <h2>Instructions for use</h2>
+      <p class="note">Tick off each step as you go. Your progress is remembered in this browser.</p>
+      <ol class="steps" id="steps">
+        <li>Open the installation file you received. Open the app. Follow the instructions in the app to download the
+          libraries the app needs and the recommended model.</li>
+        <li>Copy the specs of your machine from the app: go to the <strong>Settings</strong> tab in the left sidebar and scroll down to
+          <strong>“This computer”</strong>. You’ll paste them into the questionnaire.</li>
+        <li>Not all computers will be able to run the application, and that is fine! If the app says “no models fit your
+          computer”, go straight to the questionnaire.</li>
+        <li>Several example documents have been provided. Load them into the app one by one and select the option
+          <strong>“Find the pages with tables”</strong>:
+          <ul><li>Mandeville</li><li>Rema1000 annual report</li></ul></li>
+        <li>Before clicking <strong>“Run”</strong>, restart your computer and close all other applications.</li>
+        <li>Run the extractor.</li>
+        <li>For each document, record:
+          <ul><li>the processing time estimated by the app</li><li>the actual processing time</li></ul>
+          <span class="note">You can type these straight into the questionnaire’s “Test results” section.</span></li>
+        <li>Save the resulting files. You’ll upload them in the questionnaire.</li>
+        <li><em>Optional:</em> test other documents. Corporate ownership tables can be run directly with the current prompt.
+          For other types of tables, you can adjust the fields you want to extract in <strong>Settings » Edit instructions to the model</strong>.
+          We’d love to hear about your experience, but you don’t need to share the actual documents or results with us
+          if they are sensitive.</li>
+        <li>Fill out the questionnaire.</li>
+      </ol>
+      <button class="primary" type="button" data-goto="questionnaire">Go to the questionnaire →</button>
+    </section>
+
+    <!-- ======================= QUESTIONNAIRE ======================= -->
+    <section class="view" id="view-questionnaire" hidden>
+      <h1>Questionnaire</h1>
+      <p class="lede">Questions marked <span class="req">*</span> are required. Everything else is optional, but the more you share, the better.</p>
+
+      <form id="form" novalidate>
+        <!-- honeypot: real people never see or fill this -->
+        <div class="hp" aria-hidden="true"><label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+
+        <!-- ---------- PART 0 ---------- -->
+        <h2 id="part0">Part 0 · Tell us about yourself</h2>
+        <div class="q" data-required="role">
+          <span class="label">Which best describes you? <span class="req">*</span></span>
+          <div class="choices">
+            <label><input type="radio" name="role" value="Student"> Student</label>
+            <label><input type="radio" name="role" value="Journalist"> Journalist</label>
+            <label><input type="radio" name="role" value="Data journalist"> Data journalist</label>
+            <label><input type="radio" name="role" value="Developer"> Developer</label>
+            <label><input type="radio" name="role" value="Other"> Other</label>
+          </div>
+          <div class="err">Please choose one.</div>
+        </div>
+        <div class="q" data-show-if="role=Other">
+          <label class="label" for="role_other">Please describe your role</label>
+          <input type="text" id="role_other" name="role_other">
+        </div>
+
+        <!-- ---------- PART 1 ---------- -->
+        <h2 id="part1">Part 1 · Technical functionality</h2>
+        <div class="q" data-required="install_status">
+          <span class="label">Were you able to install and run LocalHarvest? <span class="req">*</span></span>
+          <div class="choices">
+            <label><input type="radio" name="install_status" value="Yes"> Yes</label>
+            <label><input type="radio" name="install_status" value="Partly"> Partly</label>
+            <label><input type="radio" name="install_status" value="No"> No</label>
+          </div>
+          <div class="err">Please choose one.</div>
+        </div>
+
+        <div class="q" data-show-if="install_status=Partly|No">
+          <span class="label">Which problems did you encounter?</span>
+          <p class="hint">Check all that apply.</p>
+          <div class="choices">
+            <label><input type="checkbox" name="problems" value="Download failed"> Download failed</label>
+            <label><input type="checkbox" name="problems" value="Computer crashed during download"> Computer crashed when I tried to download</label>
+            <label><input type="checkbox" name="problems" value="Installation failed"> Installation failed</label>
+            <label><input type="checkbox" name="problems" value="Performance too slow"> Performance was too slow</label>
+            <label><input type="checkbox" name="problems" value="Model made computer unusable"> The model makes the computer so slow that it cannot be used</label>
+            <label><input type="checkbox" name="problems" value="Insufficient hardware"> Insufficient hardware/resources</label>
+            <label><input type="checkbox" name="problems" value="Security concerns"> Security concerns prevented installation</label>
+            <label><input type="checkbox" name="problems" value="Instructions unclear"> I could not understand the installation instructions</label>
+            <label><input type="checkbox" name="problems" value="Other"> Other</label>
+          </div>
+        </div>
+        <div class="q" data-show-if="install_status=Partly|No">
+          <label class="label" for="problems_details">Please specify or describe the problem in more detail</label>
+          <textarea id="problems_details" name="problems_details"></textarea>
+        </div>
+
+        <div class="q">
+          <label class="label" for="hardware_specs">Hardware specs of your machine, as shown by the app</label>
+          <p class="hint">In the app: Settings tab in the left sidebar → scroll down to “This computer”. Paste the whole block.</p>
+          <textarea id="hardware_specs" name="hardware_specs" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9rem"></textarea>
+        </div>
+
+        <!-- ---------- TEST RESULTS ---------- -->
+        <h2 id="results" data-show-if="install_status=Yes|Partly">Part 2 · Test results</h2>
+        <div class="q" data-show-if="install_status=Yes|Partly">
+          <span class="label">Processing times</span>
+          <p class="hint">Any format is fine, e.g. “12 min” or “1h 05m”.</p>
+          <div class="doc-name">Mandeville</div>
+          <div class="grid2">
+            <label>Estimated by the app<input type="text" name="mandeville_estimated_time"></label>
+            <label>Actual time<input type="text" name="mandeville_actual_time"></label>
+          </div>
+          <div class="doc-name">Rema1000 annual report</div>
+          <div class="grid2">
+            <label>Estimated by the app<input type="text" name="rema1000_estimated_time"></label>
+            <label>Actual time<input type="text" name="rema1000_actual_time"></label>
+          </div>
+        </div>
+        <div class="q" data-show-if="install_status=Yes|Partly">
+          <label class="label" for="result_files">Upload the resulting files</label>
+          <p class="hint">Up to 10 files and 20 MB in total (.csv, .tsv, .xlsx, .xls, .json, .txt). <strong>Files can’t be remembered if you leave the page</strong>, so attach them just before you submit.</p>
+          <input type="file" id="result_files" multiple accept=".csv,.tsv,.xlsx,.xls,.json,.txt">
+          <ul class="filelist" id="fileList"></ul>
+        </div>
+        <div class="q" data-show-if="install_status=Yes|Partly">
+          <label class="label" for="recording_link">Screen recording link <span class="opt">(optional)</span></label>
+          <p class="hint">If you recorded your screen, share a link (Google Drive, Dropbox, WeTransfer…). Make sure we have access to it.</p>
+          <input type="url" id="recording_link" name="recording_link" placeholder="https://">
+        </div>
+
+        <!-- ---------- PART 2 ---------- -->
+        <h2 id="part2" data-show-if="install_status=Yes|Partly">Part 3 · User experience</h2>
+        <p class="note" data-show-if="install_status=Yes|Partly">Please indicate how much you agree with each statement (1 = strongly disagree, 5 = strongly agree).</p>
+
+        <div class="q" data-show-if="install_status=Yes|Partly"><span class="label">I understood the different settings and steps in the app.</span><div class="likert" data-name="ux_understood_settings_steps"></div></div>
+        <div class="q" data-show-if="install_status=Yes|Partly">
+          <label class="label" for="hard_to_understand">If there was something that was hard to understand, please copy and paste it below.</label>
+          <textarea id="hard_to_understand" name="hard_to_understand"></textarea>
+        </div>
+        <div class="q" data-show-if="install_status=Yes|Partly"><span class="label">The installation process was straightforward.</span><div class="likert" data-name="ux_install_straightforward"></div></div>
+        <div class="q" data-show-if="install_status=Yes|Partly"><span class="label">I had enough technical knowledge to use the tool.</span><div class="likert" data-name="ux_enough_knowledge"></div></div>
+        <div class="q" data-show-if="install_status=Yes|Partly"><span class="label">I felt comfortable downloading and installing the tool.</span><div class="likert" data-name="ux_comfortable_installing"></div></div>
+        <div class="q" data-show-if="install_status=Yes|Partly"><span class="label">I understood what was being installed on my computer.</span><div class="likert" data-name="ux_understood_installed"></div></div>
+        <div class="q" data-show-if="install_status=Yes|Partly">
+          <label class="label" for="trust_info">What additional information would have increased your trust in the tool?</label>
+          <textarea id="trust_info" name="trust_info"></textarea>
+        </div>
+        <div class="q" data-show-if="install_status=Yes|Partly"><span class="label">The tool could be useful in my work.</span><div class="likert" data-name="useful_in_work"></div></div>
+        <div class="q" data-show-if="install_status=Yes|Partly"><span class="label">Compared with my usual way of working, LocalHarvest would save me time.</span><div class="likert" data-name="saves_time"></div></div>
+        <div class="q" data-show-if="install_status=Yes|Partly"><span class="label">I was able to edit the prompt and use the tool on documents other than the provided test documents.</span><div class="likert" data-name="edited_prompt" data-na="Didn’t try"></div></div>
+        <div class="q" data-show-if="install_status=Yes|Partly">
+          <label class="label" for="edited_prompt_experience">Please describe your experiences or problems related to this.</label>
+          <textarea id="edited_prompt_experience" name="edited_prompt_experience"></textarea>
+        </div>
+        <div class="q" data-show-if="install_status=Yes|Partly"><span class="label">How would you rate the quality of the output generated for your own documents? <span class="opt">(if relevant)</span></span><div class="likert" data-name="own_docs_quality" data-low="Very poor" data-high="Excellent" data-na="Not applicable"></div></div>
+
+        <!-- ---------- FINISH ---------- -->
+        <h2 id="finish">Submit</h2>
+        <div class="q">
+          <label class="label" for="email">Email <span class="opt">(optional: only if you’re happy for us to follow up)</span></label>
+          <input type="email" id="email" name="email" autocomplete="email">
+        </div>
+        <div class="q" data-required="consent">
+          <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer">
+            <input type="checkbox" name="consent" value="yes" style="margin-top:5px">
+            <span>I agree that my answers and any uploaded files will be stored and used by the LocalHarvest team to improve the app. <span class="req">*</span></span>
+          </label>
+          <div class="err">Please tick this box to submit.</div>
+        </div>
+
+        <div class="submit-row">
+          <button class="primary" type="submit" id="submitBtn">Submit feedback</button>
+          <button class="secondary" type="button" id="downloadBtn">Download a copy of my answers</button>
+        </div>
+        <p id="submitStatus" role="status"></p>
+      </form>
+    </section>
+
+    <!-- ======================= THANK YOU ======================= -->
+    <section class="view" id="view-done" hidden>
+      <h1>Thank you!</h1>
+      <p>Your feedback has been sent. We really appreciate the time you put into testing LocalHarvest.</p>
+      <p class="note">Your saved answers have been cleared from this browser.</p>
+    </section>
+  </main>
+</div>
+
+<script>
+/* =====================================================================
+   CONFIG: paste your Apps Script web-app URL here (see README).
+   ===================================================================== */
+const SCRIPT_URL = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
+const STORAGE_KEY = "localharvest-feedback-v1";   // bump to -v2 if you change the questions
+const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
+const MAX_FILES = 10;
+const ALLOWED_EXTENSIONS = ["csv", "tsv", "xlsx", "xls", "json", "txt"];   // keep in sync with Code.gs
+
+const form = document.getElementById("form");
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+
+/* ---------- storage (wrapped: may be unavailable) ---------- */
+const store = {
+  ok: true,
+  get() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"); } catch { this.ok = false; return null; } },
+  set(v) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(v)); return true; } catch { this.ok = false; return false; } },
+  clear() { try { localStorage.removeItem(STORAGE_KEY); } catch {} }
+};
+try { localStorage.setItem("__lh_test", "1"); localStorage.removeItem("__lh_test"); } catch { store.ok = false; }
+
+let state = store.get() || {};
+state.respondent_id ||= (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
+state.answers ||= {};
+state.steps ||= [];
+// Personal token from the link (?t=…), remembered so it survives coming back without it
+const urlToken = new URLSearchParams(location.search).get("t");
+if (urlToken && /^[A-Za-z0-9_-]{6,64}$/.test(urlToken)) state.token = urlToken;
+const hadSaved = !!store.get();
+
+/* ---------- build likert scales ---------- */
+$$(".likert").forEach(box => {
+  const name = box.dataset.name;
+  const low = box.dataset.low || "Strongly disagree";
+  const high = box.dataset.high || "Strongly agree";
+  let pts = "";
+  for (let i = 1; i <= 5; i++) {
+    const id = `${name}_${i}`;
+    pts += `<input type="radio" id="${id}" name="${name}" value="${i}"><label class="pt" for="${id}">${i}</label>`;
+  }
+  if (box.dataset.na) {
+    pts += `<input type="radio" id="${name}_na" name="${name}" value="N/A"><label class="pt na" for="${name}_na">${box.dataset.na}</label>`;
+  }
+  box.innerHTML = `<span class="end">${low}</span><span class="pts">${pts}</span><span class="end right">${high}</span>`;
+});
+
+/* ---------- instruction checklist ---------- */
+$$("#steps > li").forEach((li, i) => {
+  const lab = document.createElement("label");
+  lab.className = "check";
+  lab.innerHTML = `<input type="checkbox"> Done`;
+  li.appendChild(lab);
+  const cb = $("input", lab);
+  cb.checked = !!state.steps[i];
+  li.classList.toggle("done", cb.checked);
+  cb.addEventListener("change", () => {
+    state.steps[i] = cb.checked;
+    li.classList.toggle("done", cb.checked);
+    updateCounts(); save();
+  });
+});
+
+/* ---------- read / write form values ---------- */
+function readForm() {
+  const out = {};
+  for (const el of form.elements) {
+    if (!el.name || el.type === "file" || el.name === "website") continue;
+    if (el.type === "radio") { if (el.checked) out[el.name] = el.value; }
+    else if (el.type === "checkbox") { out[el.name] ||= []; if (el.checked) out[el.name].push(el.value); }
+    else out[el.name] = el.value;
+  }
+  return out;
+}
+function writeForm(a) {
+  for (const el of form.elements) {
+    if (!el.name || el.type === "file" || !(el.name in a)) continue;
+    if (el.type === "radio") el.checked = a[el.name] === el.value;
+    else if (el.type === "checkbox") el.checked = (a[el.name] || []).includes(el.value);
+    else el.value = a[el.name];
+  }
+}
+
+/* ---------- conditional sections ---------- */
+function currentValue(name) {
+  const els = form.elements[name];
+  if (!els) return "";
+  if (els instanceof RadioNodeList) { return els.value || ""; }
+  return els.value;
+}
+function applyConditions() {
+  $$("[data-show-if]").forEach(el => {
+    const [name, vals] = el.dataset.showIf.split("=");
+    el.hidden = !vals.split("|").includes(currentValue(name));
+  });
+}
+
+/* ---------- progress ---------- */
+function isAnswered(q) {
+  return $$("input, textarea", q).some(el =>
+    el.type === "radio" || el.type === "checkbox" ? el.checked :
+    el.type === "file" ? el.files.length > 0 : el.value.trim() !== "");
+}
+function updateCounts() {
+  const done = state.steps.filter(Boolean).length, total = $$("#steps > li").length;
+  $("#stepCount").textContent = `${done}/${total}`;
+  const qs = $$(".q", form).filter(q => !q.hidden);
+  const answered = qs.filter(isAnswered).length;
+  const pct = qs.length ? Math.round(answered / qs.length * 100) : 0;
+  $("#qCount").textContent = `${pct}%`;
+  $("#qBar").style.width = pct + "%";
+}
+
+/* ---------- save ---------- */
+let saveTimer;
+function save() {
+  state.answers = readForm();
+  state.saved_at = new Date().toISOString();
+  if (store.set(state)) {
+    const t = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    $("#saveStatus").textContent = `Saved in this browser · ${t}`;
+  } else {
+    $("#storageBanner").hidden = false;
+    $("#saveStatus").textContent = "Not saving: browser storage unavailable.";
+  }
+}
+form.addEventListener("input", () => {
+  applyConditions(); updateCounts();
+  clearTimeout(saveTimer); saveTimer = setTimeout(save, 400);
+});
+form.addEventListener("change", () => { applyConditions(); updateCounts(); save(); });
+
+/* ---------- views ---------- */
+function showView(name, anchor) {
+  $$(".view").forEach(v => v.hidden = v.id !== "view-" + name);
+  $$(".nav-btn").forEach(b => b.classList.toggle("active", b.dataset.view === name));
+  if (name !== "done") { state.view = name; store.set(state); }
+  if (anchor) document.getElementById(anchor)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  else window.scrollTo(0, 0);
+}
+$$(".nav-btn, [data-goto]").forEach(b => b.addEventListener("click", () => showView(b.dataset.view || b.dataset.goto)));
+$$("#subnav a").forEach(a => a.addEventListener("click", e => {
+  e.preventDefault(); showView("questionnaire", a.getAttribute("href").slice(1));
+}));
+
+/* ---------- files ---------- */
+const fileInput = $("#result_files");
+function totalFileBytes() { return [...fileInput.files].reduce((s, f) => s + f.size, 0); }
+function fileProblem() {
+  const files = [...fileInput.files];
+  if (files.length > MAX_FILES) return `Please attach at most ${MAX_FILES} files.`;
+  const bad = files.filter(f => !ALLOWED_EXTENSIONS.includes((f.name.split(".").pop() || "").toLowerCase()));
+  if (bad.length) return `These file types can’t be uploaded: ${bad.map(f => f.name).join(", ")}. Allowed: ${ALLOWED_EXTENSIONS.map(e => "." + e).join(", ")}.`;
+  if (totalFileBytes() > MAX_UPLOAD_BYTES) return "Total is over 20 MB. Please remove some files or share them by link instead.";
+  return "";
+}
+fileInput.addEventListener("change", () => {
+  const list = $("#fileList");
+  list.innerHTML = [...fileInput.files].map(f => `<li>${escapeHtml(f.name)} (${fmtSize(f.size)})</li>`).join("");
+  const problem = fileProblem();
+  if (problem) list.innerHTML += `<li style="color:var(--warn)">${escapeHtml(problem)}</li>`;
+  updateCounts();
+});
+function fmtSize(b) { return b > 1048576 ? (b / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(b / 1024)) + " KB"; }
+function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+function readAsBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(String(r.result).split(",")[1] || "");
+    r.onerror = () => rej(r.error);
+    r.readAsDataURL(file);
+  });
+}
+
+/* ---------- payload ---------- */
+function buildAnswers() {
+  const a = readForm();
+  // Blank out answers to questions that are currently hidden (e.g. Part 2 when install = No)
+  for (const el of form.elements) {
+    if (el.name && el.name in a && el.closest("[hidden]")) a[el.name] = Array.isArray(a[el.name]) ? [] : "";
+  }
+  for (const k in a) if (Array.isArray(a[k])) a[k] = a[k].join("; ");
+  return a;
+}
+
+/* ---------- validation ---------- */
+function validate() {
+  let first = null;
+  $$("[data-required]", form).forEach(q => {
+    const bad = !q.hidden && !isAnswered(q);
+    q.classList.toggle("invalid", bad);
+    if (bad && !first) first = q;
+  });
+  return first;
+}
+form.addEventListener("change", e => e.target.closest(".q")?.classList.remove("invalid"));
+
+/* ---------- submit ---------- */
+const status = $("#submitStatus");
+form.addEventListener("submit", async e => {
+  e.preventDefault();
+  const firstBad = validate();
+  if (firstBad) { firstBad.scrollIntoView({ behavior: "smooth", block: "center" }); status.textContent = "Please complete the highlighted questions."; return; }
+  if (form.website.value) return; // bot
+  if (fileProblem()) { status.textContent = fileProblem(); return; }
+  if (!state.token) {
+    status.innerHTML = "<span style='color:var(--warn)'>We can’t find your personal link. Please reopen this page using the link we sent you. Your answers are saved and will still be here.</span>";
+    return;
+  }
+  if (!/^https:\/\/script\.google\.com\//.test(SCRIPT_URL)) {
+    status.innerHTML = "<span style='color:var(--warn)'>This form isn’t connected yet (missing SCRIPT_URL). Please use “Download a copy of my answers” and send the file to us.</span>";
+    return;
+  }
+
+  const btn = $("#submitBtn");
+  btn.disabled = true; status.textContent = "Sending…";
+  try {
+    const files = [];
+    for (const f of fileInput.files) files.push({ name: f.name, type: f.type || "application/octet-stream", data: await readAsBase64(f) });
+    const payload = {
+      token: state.token,
+      respondent_id: state.respondent_id,
+      submitted_at_client: new Date().toISOString(),
+      user_agent: navigator.userAgent,
+      form_version: STORAGE_KEY,
+      ...buildAnswers(),
+      website: form.website.value,
+      files
+    };
+    // text/plain body avoids a CORS preflight, which Apps Script doesn't support
+    const res = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
+    const out = await res.json();
+    if (!out.ok) throw new Error(ERROR_MESSAGES[out.code] || ERROR_MESSAGES.error);
+    store.clear();
+    showView("done");
+  } catch (err) {
+    console.error(err);
+    btn.disabled = false;
+    const msg = err instanceof TypeError ? "We couldn’t reach the server. Please check your internet connection." : String(err.message || err);
+    status.innerHTML = `<span style="color:var(--warn)">${escapeHtml(msg)} Your answers are still saved here. If it keeps failing, use “Download a copy of my answers” and email us the file.</span>`;
+  }
+});
+
+const ERROR_MESSAGES = {
+  auth: "Your personal link wasn’t recognised. Please reopen the page using the exact link we sent you.",
+  limit: "Submissions are temporarily limited. Please try again later or contact us.",
+  files: "One of the attached files wasn’t accepted (type, number or size). Please check the files and try again.",
+  invalid: "The submission couldn’t be read. Please try again.",
+  busy: "The server is busy. Please try again in a minute.",
+  error: "Sorry, something went wrong while sending."
+};
+
+/* ---------- download fallback ---------- */
+$("#downloadBtn").addEventListener("click", () => {
+  const data = { respondent_id: state.respondent_id, exported_at: new Date().toISOString(), ...buildAnswers(),
+    attached_files: [...fileInput.files].map(f => f.name) };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "localharvest-feedback.json";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+
+/* ---------- clear ---------- */
+$("#clearBtn").addEventListener("click", () => {
+  if (!confirm("Clear all your saved answers and checklist progress on this browser?")) return;
+  store.clear(); location.reload();
+});
+
+/* ---------- init ---------- */
+writeForm(state.answers);
+applyConditions();
+updateCounts();
+if (!store.ok) $("#storageBanner").hidden = false;
+if (!state.token) $("#tokenBanner").hidden = false;
+if (hadSaved && (Object.keys(state.answers).length || state.steps.some(Boolean))) {
+  const when = state.saved_at ? new Date(state.saved_at).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "";
+  const b = $("#restoreBanner");
+  b.innerHTML = `<strong>Welcome back.</strong> We restored the progress you saved${when ? " on " + when : ""}. ` +
+    `Uploaded files aren’t remembered, so please re-attach them before submitting.`;
+  b.hidden = false;
+}
+showView(state.view || "instructions");
+store.set(state);
+</script>
+</body>
+</html>
