@@ -141,8 +141,8 @@
         <a href="#part0">0 · About you</a>
         <a href="#part1">1 · Technical functionality</a>
         <a href="#results" data-show-if="install_status=Yes|Partly">2 · Test results</a>
-        <a href="#part2" data-show-if="install_status=Yes|Partly">3 · User experience</a>
-        <a href="#finish">Submit</a>
+        <a href="#part2">3 · User experience</a>
+        <a href="#finish">Anything else &amp; submit</a>
       </div>
     </nav>
     <div class="side-foot">
@@ -179,21 +179,24 @@
       <h2>Instructions for use</h2>
       <p class="note">Tick off each step as you go. Your progress is remembered in this browser.</p>
       <ol class="steps" id="steps">
+        <li><strong>Restart your computer and close all other applications.</strong> While the app is running, please don’t
+          use any other windows or programs, so that the processing times reflect the app alone.</li>
         <li>Open the installation file you received. Open the app. Follow the instructions in the app to download the
           libraries the app needs and the recommended model.</li>
-        <li>Copy the specs of your machine from the app: go to the <strong>Settings</strong> tab in the left sidebar and scroll down to
-          <strong>“This computer”</strong>. You’ll paste them into the questionnaire.</li>
-        <li>Not all computers will be able to run the application, and that is fine! If the app says “no models fit your
-          computer”, go straight to the questionnaire.</li>
         <li>Several example documents have been provided. Load them into the app one by one and select the option
           <strong>“Find the pages with tables”</strong>:
           <ul><li>Mandeville</li><li>Rema1000 annual report</li></ul></li>
-        <li>Before clicking <strong>“Run”</strong>, restart your computer and close all other applications.</li>
-        <li>Run the extractor.</li>
+        <li>Not all computers will be able to run a model, and that is fine! If the app says “no models fit your
+          computer”, please still look around: load the documents and explore the settings, because we’d love your
+          feedback on that part too. Then skip to <strong>step 8</strong> and the questionnaire.</li>
+        <li>Click <strong>“Run”</strong> to run the extractor. Remember not to use other windows or programs while it’s running.</li>
         <li>For each document, record:
           <ul><li>the processing time estimated by the app</li><li>the actual processing time</li></ul>
           <span class="note">You can type these straight into the questionnaire’s “Test results” section.</span></li>
         <li>Save the resulting files. You’ll upload them in the questionnaire.</li>
+        <li>Copy the description of your computer (how fast it is and how much memory it has): in the app, go to the
+          <strong>Settings</strong> tab in the left sidebar and scroll down to <strong>“This computer”</strong>.
+          You’ll paste it into the questionnaire.</li>
         <li><em>Optional:</em> test other documents. Corporate ownership tables can be run directly with the current prompt.
           For other types of tables, you can adjust the fields you want to extract in <strong>Settings » Edit instructions to the model</strong>.
           We’d love to hear about your experience, but you don’t need to share the actual documents or results with us
@@ -221,6 +224,7 @@
             <label><input type="radio" name="role" value="Journalist"> Journalist</label>
             <label><input type="radio" name="role" value="Data journalist"> Data journalist</label>
             <label><input type="radio" name="role" value="Developer"> Developer</label>
+            <label><input type="radio" name="role" value="Teacher/professor"> Teacher/professor</label>
             <label><input type="radio" name="role" value="Other"> Other</label>
           </div>
           <div class="err">Please choose one.</div>
@@ -228,6 +232,16 @@
         <div class="q" data-show-if="role=Other">
           <label class="label" for="role_other">Please describe your role</label>
           <input type="text" id="role_other" name="role_other">
+        </div>
+        <div class="q">
+          <span class="label">What is your experience with AI tools?</span>
+          <p class="hint">Check all that apply.</p>
+          <div class="choices">
+            <label><input type="checkbox" name="ai_experience" value="None"> I don’t really use AI tools</label>
+            <label><input type="checkbox" name="ai_experience" value="Chatbots"> I use AI chatbots (e.g. ChatGPT, Claude, Gemini)</label>
+            <label><input type="checkbox" name="ai_experience" value="Local models"> I have run AI models locally on my own computer</label>
+            <label><input type="checkbox" name="ai_experience" value="Build AI tools"> I build AI tools or applications</label>
+          </div>
         </div>
 
         <!-- ---------- PART 1 ---------- -->
@@ -263,7 +277,7 @@
         </div>
 
         <div class="q">
-          <label class="label" for="hardware_specs">Hardware specs of your machine, as shown by the app</label>
+          <label class="label" for="hardware_specs">Copy the description of your computer (how fast it is and how much memory it has).</label>
           <p class="hint">In the app: Settings tab in the left sidebar → scroll down to “This computer”. Paste the whole block.</p>
           <textarea id="hardware_specs" name="hardware_specs" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9rem"></textarea>
         </div>
@@ -285,6 +299,19 @@
           </div>
         </div>
         <div class="q" data-show-if="install_status=Yes|Partly">
+          <span class="label">How did your computer handle the app while it was running?</span>
+          <div class="choices">
+            <label><input type="radio" name="computer_handling" value="Smooth"> It ran smoothly</label>
+            <label><input type="radio" name="computer_handling" value="Slower but usable"> The computer was a bit slower, but still usable</label>
+            <label><input type="radio" name="computer_handling" value="Very slow"> The computer became very slow or hard to use</label>
+            <label><input type="radio" name="computer_handling" value="Froze or crashed"> The computer or the app froze or crashed</label>
+          </div>
+        </div>
+        <div class="q" data-show-if="install_status=Yes|Partly">
+          <label class="label" for="computer_handling_details">Anything to add about how your computer handled it? <span class="opt">(e.g. fans, heat, freezing, other apps)</span></label>
+          <textarea id="computer_handling_details" name="computer_handling_details"></textarea>
+        </div>
+        <div class="q" data-show-if="install_status=Yes|Partly">
           <label class="label" for="result_files">Upload the resulting files</label>
           <p class="hint">Up to 10 files and 20 MB in total (.csv, .tsv, .xlsx, .xls, .json, .txt). <strong>Files can’t be remembered if you leave the page</strong>, so attach them just before you submit.</p>
           <input type="file" id="result_files" multiple accept=".csv,.tsv,.xlsx,.xls,.json,.txt">
@@ -296,25 +323,27 @@
           <input type="url" id="recording_link" name="recording_link" placeholder="https://">
         </div>
 
-        <!-- ---------- PART 2 ---------- -->
-        <h2 id="part2" data-show-if="install_status=Yes|Partly">Part 3 · User experience</h2>
-        <p class="note" data-show-if="install_status=Yes|Partly">Please indicate how much you agree with each statement (1 = strongly disagree, 5 = strongly agree).</p>
+        <!-- ---------- PART 3 ---------- -->
+        <h2 id="part2">Part 3 · User experience</h2>
+        <p class="note">For the statements, please indicate how much you agree (1 = strongly disagree, 5 = strongly agree).
+          If you didn’t get far enough to answer a question, just skip it.</p>
 
-        <div class="q" data-show-if="install_status=Yes|Partly"><span class="label">I understood the different settings and steps in the app.</span><div class="likert" data-name="ux_understood_settings_steps"></div></div>
-        <div class="q" data-show-if="install_status=Yes|Partly">
+        <div class="q"><span class="label">I understood the different settings and steps in the app.</span><div class="likert" data-name="ux_understood_settings_steps"></div></div>
+        <div class="q">
           <label class="label" for="hard_to_understand">If there was something that was hard to understand, please copy and paste it below.</label>
           <textarea id="hard_to_understand" name="hard_to_understand"></textarea>
         </div>
-        <div class="q" data-show-if="install_status=Yes|Partly"><span class="label">The installation process was straightforward.</span><div class="likert" data-name="ux_install_straightforward"></div></div>
-        <div class="q" data-show-if="install_status=Yes|Partly"><span class="label">I had enough technical knowledge to use the tool.</span><div class="likert" data-name="ux_enough_knowledge"></div></div>
-        <div class="q" data-show-if="install_status=Yes|Partly"><span class="label">I felt comfortable downloading and installing the tool.</span><div class="likert" data-name="ux_comfortable_installing"></div></div>
-        <div class="q" data-show-if="install_status=Yes|Partly"><span class="label">I understood what was being installed on my computer.</span><div class="likert" data-name="ux_understood_installed"></div></div>
-        <div class="q" data-show-if="install_status=Yes|Partly">
+        <div class="q"><span class="label">The explanations of the technical aspects of the tool were sufficient.</span><div class="likert" data-name="ux_technical_explanations"></div></div>
+        <div class="q"><span class="label">The app was easy to use (loading documents, choosing options, running and saving results).</span><div class="likert" data-name="ux_easy_to_use" data-na="Didn’t get that far"></div></div>
+        <div class="q"><span class="label">The installation process was straightforward.</span><div class="likert" data-name="ux_install_straightforward"></div></div>
+        <div class="q"><span class="label">I felt comfortable downloading and installing the tool.</span><div class="likert" data-name="ux_comfortable_installing"></div></div>
+        <div class="q"><span class="label">I understood what was being installed on my computer.</span><div class="likert" data-name="ux_understood_installed"></div></div>
+        <div class="q">
           <label class="label" for="trust_info">What additional information would have increased your trust in the tool?</label>
           <textarea id="trust_info" name="trust_info"></textarea>
         </div>
-        <div class="q" data-show-if="install_status=Yes|Partly"><span class="label">The tool could be useful in my work.</span><div class="likert" data-name="useful_in_work"></div></div>
-        <div class="q" data-show-if="install_status=Yes|Partly"><span class="label">Compared with my usual way of working, LocalHarvest would save me time.</span><div class="likert" data-name="saves_time"></div></div>
+        <div class="q"><span class="label">The tool could be useful in my work.</span><div class="likert" data-name="useful_in_work"></div></div>
+        <div class="q"><span class="label">Compared with my usual way of working, LocalHarvest would save me time.</span><div class="likert" data-name="saves_time"></div></div>
         <div class="q" data-show-if="install_status=Yes|Partly"><span class="label">I was able to edit the prompt and use the tool on documents other than the provided test documents.</span><div class="likert" data-name="edited_prompt" data-na="Didn’t try"></div></div>
         <div class="q" data-show-if="install_status=Yes|Partly">
           <label class="label" for="edited_prompt_experience">Please describe your experiences or problems related to this.</label>
@@ -323,7 +352,11 @@
         <div class="q" data-show-if="install_status=Yes|Partly"><span class="label">How would you rate the quality of the output generated for your own documents? <span class="opt">(if relevant)</span></span><div class="likert" data-name="own_docs_quality" data-low="Very poor" data-high="Excellent" data-na="Not applicable"></div></div>
 
         <!-- ---------- FINISH ---------- -->
-        <h2 id="finish">Submit</h2>
+        <h2 id="finish">Anything else?</h2>
+        <div class="q">
+          <label class="label" for="anything_else">Is there anything else you’d like to share about your experience, or anything this questionnaire didn’t cover?</label>
+          <textarea id="anything_else" name="anything_else" style="min-height:130px"></textarea>
+        </div>
         <div class="q">
           <label class="label" for="email">Email <span class="opt">(optional: only if you’re happy for us to follow up)</span></label>
           <input type="email" id="email" name="email" autocomplete="email">
@@ -358,7 +391,7 @@
    CONFIG: paste your Apps Script web-app URL here (see README).
    ===================================================================== */
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzyP25CfNmPschqDOCYHpPKkhGnWnW37XmvFeHJv6JsqoNFP7nnqDLds-0aDarIOU5iTA/exec";
-const STORAGE_KEY = "localharvest-feedback-v1";   // bump to -v2 if you change the questions
+const STORAGE_KEY = "localharvest-feedback-v2";   // bump to -v2 if you change the questions
 const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
 const MAX_FILES = 10;
 const ALLOWED_EXTENSIONS = ["csv", "tsv", "xlsx", "xls", "json", "txt"];   // keep in sync with Code.gs
